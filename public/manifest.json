@@ -1,0 +1,26 @@
+{
+  "name": "World Explorer",
+  "short_name": "WorldExplorer",
+  "description": "Edukacyjna gra geograficzna dla dzieci",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B3B6F",
+  "theme_color": "#1B3B6F",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "games"],
+  "lang": "pl"
+}
