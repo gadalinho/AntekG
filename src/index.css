@@ -13,27 +13,43 @@
   --font-game: 'Fredoka', sans-serif;
 }
 
-* {
+/* ── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
 
-html, body, #root {
+html {
+  height: 100%;
+  /* Prevent iOS rubber-band scroll outside the app */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: 'Fredoka', sans-serif;
+  background-color: #0a1629;
+  color: #fff;
+  user-select: none;
+  /* Smooth momentum scroll inside scrollable areas */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
+#root {
   height: 100%;
   overflow: hidden;
 }
 
-body {
-  font-family: 'Fredoka', sans-serif;
-  background-color: #1B3B6F;
-  color: #fff;
-  user-select: none;
-}
-
+/* ── Touch targets ────────────────────────────────────────── */
 button, [role="button"] {
-  min-height: 48px;
-  min-width: 48px;
+  min-height: 44px;
+  min-width: 44px;
   cursor: pointer;
+  touch-action: manipulation; /* no 300ms delay */
 }
 
 button:focus-visible,
@@ -44,6 +60,15 @@ a:focus-visible {
   border-radius: 4px;
 }
 
+/* ── Scrollable panels ────────────────────────────────────── */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -51,3 +76,7 @@ a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Safe-area insets (iOS notch / home indicator) ────────── */
+.safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }

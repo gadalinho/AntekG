@@ -4,27 +4,25 @@ import type { Screen, Player, GameProgress, Badge } from '@/types/GameState';
 import { LEVEL_NAMES, XP_PER_LEVEL } from '@/types/GameState';
 import { INITIAL_BADGES } from '@/data/badges';
 import { COUNTRIES } from '@/data';
+import { ALL_MISSIONS } from '@/data/missions';
+import type { MissionMetric } from '@/data/missions';
 import { loadSavedState, saveState, clearSavedState } from '@/utils/storage';
 
+const ONE_DAY = 24 * 60 * 60 * 1000;
+const ONE_WEEK = 7 * ONE_DAY;
+
 interface GameStore {
-  // Nawigacja
   screen: Screen;
   selectedCountryId: string | null;
-
-  // Gracz
   player: Player | null;
   progress: GameProgress;
-
-  // Onboarding
   isOnboarded: boolean;
 
-  // Akcje nawigacyjne
   goToMap: () => void;
   goToCountry: (id: string) => void;
   goToScreen: (screen: Screen) => void;
   goBack: () => void;
 
-  // Akcje gracza
   setupPlayer: (name: string) => void;
   visitCountry: (countryId: string) => void;
   addCoins: (amount: number) => void;
@@ -39,8 +37,8 @@ interface GameStore {
   purchaseItem: (itemId: string) => void;
   setMapBackground: (bg: string) => void;
   earnBadge: (badgeId: string) => void;
+  incrementMetric: (metric: MissionMetric, amount?: number) => void;
 
-  // Trwałość
   saveProgress: () => void;
   resetProgress: () => void;
 }
@@ -59,6 +57,13 @@ const DEFAULT_PROGRESS: GameProgress = {
   learnedLanguages: [],
   mapBackground: 'default',
   purchasedItems: [],
+  missionProgress: {},
+  completedMissions: [],
+  lastDailyReset: Date.now(),
+  lastWeeklyReset: Date.now(),
+  quizRoundsPlayed: 0,
+  gamesPlayed: 0,
+  bestQuizStreak: 0,
 };
 
 function computeLevel(xp: number): number {
@@ -72,7 +77,6 @@ function computeLevel(xp: number): number {
 function checkBadges(progress: GameProgress): Badge[] {
   return progress.badges.map(badge => {
     if (badge.earned) return badge;
-
     let shouldEarn = false;
     switch (badge.id) {
       case 'first_step':
@@ -106,9 +110,106 @@ function checkBadges(progress: GameProgress): Badge[] {
         shouldEarn = progress.collectedFacts.length >= 25;
         break;
     }
-
     return shouldEarn ? { ...badge, earned: true, earnedAt: Date.now() } : badge;
   });
+}
+
+// Returns { coins, xp } earned from newly completed missions
+function checkMissions(progress: GameProgress): {
+  updatedProgress: GameProgress;
+  coinsEarned: number;
+  xpEarned: number;
+} {
+  const now = Date.now();
+  let updatedProgress = { ...progress };
+  let coinsEarned = 0;
+  let xpEarned = 0;
+
+  // Reset daily missions if needed
+  if (now - progress.lastDailyReset > ONE_DAY) {
+    const dailyIds = ALL_MISSIONS.filter(m => m.type === 'daily').map(m => m.id);
+    updatedProgress = {
+      ...updatedProgress,
+      completedMissions: updatedProgress.completedMissions.filter(id => !dailyIds.includes(id)),
+      missionProgress: Object.fromEntries(
+        Object.entries(updatedProgress.missionProgress).filter(([id]) => !dailyIds.includes(id))
+      ),
+      lastDailyReset: now,
+    };
+  }
+
+  // Reset weekly missions if needed
+  if (now - progress.lastWeeklyReset > ONE_WEEK) {
+    const weeklyIds = ALL_MISSIONS.filter(m => m.type === 'weekly').map(m => m.id);
+    updatedProgress = {
+      ...updatedProgress,
+      completedMissions: updatedProgress.completedMissions.filter(id => !weeklyIds.includes(id)),
+      missionProgress: Object.fromEntries(
+        Object.entries(updatedProgress.missionProgress).filter(([id]) => !weeklyIds.includes(id))
+      ),
+      lastWeeklyReset: now,
+    };
+  }
+
+  return { updatedProgress, coinsEarned, xpEarned };
+}
+
+function getMetricValue(progress: GameProgress, metric: MissionMetric): number {
+  switch (metric) {
+    case 'visitedCountries':
+      return progress.visitedCountries.length;
+    case 'collectedFacts':
+      return progress.collectedFacts.length;
+    case 'correctAnswers':
+      return progress.correctAnswers;
+    case 'discoveredFoods':
+      return progress.discoveredFoods.length;
+    case 'discoveredAnimals':
+      return progress.discoveredAnimals.length;
+    case 'learnedLanguages':
+      return progress.learnedLanguages.length;
+    case 'quizRoundsPlayed':
+      return progress.quizRoundsPlayed;
+    case 'gamesPlayed':
+      return progress.gamesPlayed;
+  }
+}
+
+function evaluateMissions(progress: GameProgress): {
+  progress: GameProgress;
+  coinsEarned: number;
+  xpEarned: number;
+} {
+  const { updatedProgress } = checkMissions(progress);
+  let result = updatedProgress;
+  let coinsEarned = 0;
+  let xpEarned = 0;
+
+  for (const mission of ALL_MISSIONS) {
+    if (result.completedMissions.includes(mission.id)) continue;
+    const value = getMetricValue(result, mission.metric);
+    const prev = result.missionProgress[mission.id] ?? 0;
+    const updated = Math.max(prev, value);
+    if (updated !== prev) {
+      result = {
+        ...result,
+        missionProgress: { ...result.missionProgress, [mission.id]: updated },
+      };
+    }
+    if (updated >= mission.goal) {
+      result = {
+        ...result,
+        completedMissions: [...result.completedMissions, mission.id],
+        coins: result.coins + mission.reward.coins,
+        xp: result.xp + mission.reward.xp,
+      };
+      coinsEarned += mission.reward.coins;
+      xpEarned += mission.reward.xp;
+    }
+  }
+
+  result = { ...result, level: computeLevel(result.xp) };
+  return { progress: result, coinsEarned, xpEarned };
 }
 
 export const useGameStore = create<GameStore>()(
@@ -127,12 +228,7 @@ export const useGameStore = create<GameStore>()(
       goToScreen: (screen: Screen) => set({ screen }),
       goBack: () => {
         const { screen } = get();
-        if (
-          screen === 'country' ||
-          screen === 'backpack' ||
-          screen === 'passport' ||
-          screen === 'shop'
-        ) {
+        if (['country', 'backpack', 'passport', 'shop', 'quiz', 'missions'].includes(screen)) {
           set({ screen: 'map', selectedCountryId: null });
         } else if (screen === 'minigame') {
           set({ screen: 'country' });
@@ -158,7 +254,8 @@ export const useGameStore = create<GameStore>()(
             visitedCountries: [...state.progress.visitedCountries, countryId],
           };
           const withBadges = { ...updated, badges: checkBadges(updated) };
-          return { progress: withBadges };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
         });
         get().saveProgress();
       },
@@ -192,7 +289,9 @@ export const useGameStore = create<GameStore>()(
             ...state.progress,
             collectedFacts: [...state.progress.collectedFacts, factId],
           };
-          return { progress: { ...updated, badges: checkBadges(updated) } };
+          const withBadges = { ...updated, badges: checkBadges(updated) };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
         });
         get().saveProgress();
       },
@@ -216,7 +315,9 @@ export const useGameStore = create<GameStore>()(
             ...state.progress,
             correctAnswers: state.progress.correctAnswers + 1,
           };
-          return { progress: { ...updated, badges: checkBadges(updated) } };
+          const withBadges = { ...updated, badges: checkBadges(updated) };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
         });
         get().saveProgress();
       },
@@ -228,7 +329,9 @@ export const useGameStore = create<GameStore>()(
             ...state.progress,
             discoveredFoods: [...state.progress.discoveredFoods, food],
           };
-          return { progress: { ...updated, badges: checkBadges(updated) } };
+          const withBadges = { ...updated, badges: checkBadges(updated) };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
         });
         get().saveProgress();
       },
@@ -240,7 +343,9 @@ export const useGameStore = create<GameStore>()(
             ...state.progress,
             discoveredAnimals: [...state.progress.discoveredAnimals, animal],
           };
-          return { progress: { ...updated, badges: checkBadges(updated) } };
+          const withBadges = { ...updated, badges: checkBadges(updated) };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
         });
         get().saveProgress();
       },
@@ -252,7 +357,28 @@ export const useGameStore = create<GameStore>()(
             ...state.progress,
             learnedLanguages: [...state.progress.learnedLanguages, langId],
           };
-          return { progress: { ...updated, badges: checkBadges(updated) } };
+          const withBadges = { ...updated, badges: checkBadges(updated) };
+          const { progress } = evaluateMissions(withBadges);
+          return { progress };
+        });
+        get().saveProgress();
+      },
+
+      incrementMetric: (metric: MissionMetric, amount = 1) => {
+        set(state => {
+          let updated = state.progress;
+          switch (metric) {
+            case 'quizRoundsPlayed':
+              updated = { ...updated, quizRoundsPlayed: (updated.quizRoundsPlayed ?? 0) + amount };
+              break;
+            case 'gamesPlayed':
+              updated = { ...updated, gamesPlayed: (updated.gamesPlayed ?? 0) + amount };
+              break;
+            default:
+              break;
+          }
+          const { progress } = evaluateMissions(updated);
+          return { progress };
         });
         get().saveProgress();
       },

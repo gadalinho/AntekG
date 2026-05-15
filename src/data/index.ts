@@ -1,8 +1,9 @@
 import { validateCountries } from '@/types/Country';
 import type { Country } from '@/types/Country';
 import { COUNTRIES_RAW } from './countries';
+import { COUNTRIES_EXTRA_RAW } from './countries_extra';
 
-export const COUNTRIES: Country[] = validateCountries(COUNTRIES_RAW);
+export const COUNTRIES: Country[] = validateCountries([...COUNTRIES_RAW, ...COUNTRIES_EXTRA_RAW]);
 
 export function getCountryById(id: string): Country | undefined {
   return COUNTRIES.find(c => c.id === id);

@@ -69,6 +69,22 @@ export function MapScreen() {
           </button>
 
           <button
+            onClick={() => goToScreen('quiz')}
+            className="bg-white/10 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Quiz geograficzny"
+          >
+            <span className="text-xl">🧠</span>
+          </button>
+
+          <button
+            onClick={() => goToScreen('missions')}
+            className="bg-white/10 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Misje"
+          >
+            <span className="text-xl">📋</span>
+          </button>
+
+          <button
             onClick={() => goToScreen('backpack')}
             className="bg-white/10 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Plecak odkrywcy"

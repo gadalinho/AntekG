@@ -7,6 +7,8 @@ import { CountryScreen } from './screens/CountryScreen';
 import { MiniGameScreen } from './screens/MiniGameScreen';
 import { BackpackScreen } from './screens/BackpackScreen';
 import { ShopScreen } from './screens/ShopScreen';
+import { QuizScreen } from './screens/QuizScreen';
+import { MissionsScreen } from './screens/MissionsScreen';
 
 const screenVariants = {
   initial: { opacity: 0, y: 20 },
@@ -19,110 +21,142 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="relative w-full h-full overflow-hidden bg-[#1B3B6F]">
-        {/* Główne ekrany (bez country — ten animuje się osobno) */}
-        <AnimatePresence mode="wait">
-          {screen === 'onboarding' && (
-            <motion.div
-              key="onboarding"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
-            >
-              <OnboardingScreen />
-            </motion.div>
-          )}
+      {/* Outer: centers content on tablet/desktop */}
+      <div className="fixed inset-0 flex items-center justify-center bg-[#0a1629]">
+        <div className="relative w-full h-full max-w-[480px] max-h-[900px] overflow-hidden bg-[#1B3B6F] shadow-2xl">
+          <AnimatePresence mode="wait">
+            {screen === 'onboarding' && (
+              <motion.div
+                key="onboarding"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <OnboardingScreen />
+              </motion.div>
+            )}
 
-          {(screen === 'map' || screen === 'country') && (
-            <motion.div
-              key="map"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
-            >
-              <MapScreen />
-            </motion.div>
-          )}
+            {(screen === 'map' || screen === 'country') && (
+              <motion.div
+                key="map"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <MapScreen />
+              </motion.div>
+            )}
 
-          {screen === 'minigame' && (
-            <motion.div
-              key="minigame"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
-            >
-              <MiniGameScreen />
-            </motion.div>
-          )}
+            {screen === 'minigame' && (
+              <motion.div
+                key="minigame"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <MiniGameScreen />
+              </motion.div>
+            )}
 
-          {screen === 'backpack' && (
-            <motion.div
-              key="backpack"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
-            >
-              <BackpackScreen />
-            </motion.div>
-          )}
+            {screen === 'backpack' && (
+              <motion.div
+                key="backpack"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <BackpackScreen />
+              </motion.div>
+            )}
 
-          {screen === 'shop' && (
-            <motion.div
-              key="shop"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
-            >
-              <ShopScreen />
-            </motion.div>
-          )}
+            {screen === 'shop' && (
+              <motion.div
+                key="shop"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <ShopScreen />
+              </motion.div>
+            )}
 
-          {screen === 'passport' && (
-            <motion.div
-              key="passport"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="text-center p-6">
-                <div className="text-6xl mb-4">🚧</div>
-                <p className="text-[#FFD93D] font-bold text-xl mb-2">Paszport</p>
-                <p className="text-white/60 mb-6">Ten ekran jest w budowie…</p>
-                <button
-                  onClick={() => useGameStore.getState().goToMap()}
-                  className="bg-[#FF8C42] text-white font-bold px-6 py-3 rounded-2xl"
-                >
-                  ← Wróć na mapę
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {screen === 'quiz' && (
+              <motion.div
+                key="quiz"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <QuizScreen />
+              </motion.div>
+            )}
 
-        {/* Country screen jako osobna nakładka — slajduje od dołu przez CSS transition */}
-        <div
-          className={`absolute inset-0 z-10 transition-transform duration-300 ease-out ${screen !== 'country' ? 'pointer-events-none' : ''}`}
-          style={{ transform: screen === 'country' ? 'translateY(0)' : 'translateY(100%)' }}
-        >
-          <CountryScreen />
+            {screen === 'missions' && (
+              <motion.div
+                key="missions"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <MissionsScreen />
+              </motion.div>
+            )}
+
+            {screen === 'passport' && (
+              <motion.div
+                key="passport"
+                variants={screenVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <div className="text-center p-6">
+                  <div className="text-6xl mb-4">🚧</div>
+                  <p className="text-[#FFD93D] font-bold text-xl mb-2">Paszport</p>
+                  <p className="text-white/60 mb-6">Ten ekran jest w budowie…</p>
+                  <button
+                    onClick={() => useGameStore.getState().goToMap()}
+                    className="bg-[#FF8C42] text-white font-bold px-6 py-3 rounded-2xl"
+                  >
+                    ← Wróć na mapę
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Country screen: CSS slide-up overlay (avoids StrictMode double-mount) */}
+          <div
+            className={`absolute inset-0 z-10 transition-transform duration-300 ease-out ${
+              screen !== 'country' ? 'pointer-events-none' : ''
+            }`}
+            style={{ transform: screen === 'country' ? 'translateY(0)' : 'translateY(100%)' }}
+          >
+            <CountryScreen />
+          </div>
         </div>
       </div>
     </ErrorBoundary>

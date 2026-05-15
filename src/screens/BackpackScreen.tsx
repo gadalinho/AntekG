@@ -81,7 +81,10 @@ export function BackpackScreen() {
       <div className="flex-1 overflow-y-auto">
         {tab === 'odkrycia' && (
           <div className="p-4 space-y-4">
-            <Section title="🌍 Odwiedzone kraje" count={`${progress.visitedCountries.length}/30`}>
+            <Section
+              title="🌍 Odwiedzone kraje"
+              count={`${progress.visitedCountries.length}/${COUNTRIES.length}`}
+            >
               {visitedCountryObjects.length === 0 ? (
                 <p className="text-white/40 text-sm">Odwiedź swój pierwszy kraj na mapie!</p>
               ) : (
@@ -132,7 +135,10 @@ export function BackpackScreen() {
               )}
             </Section>
 
-            <Section title="💬 Poznane języki" count={`${progress.learnedLanguages.length}/30`}>
+            <Section
+              title="💬 Poznane języki"
+              count={`${progress.learnedLanguages.length}/${COUNTRIES.length}`}
+            >
               {progress.learnedLanguages.length === 0 ? (
                 <p className="text-white/40 text-sm">Ucz się zwrotów w zakładce Język!</p>
               ) : (
@@ -187,7 +193,7 @@ export function BackpackScreen() {
               {
                 icon: '🌍',
                 label: 'Odwiedzone kraje',
-                value: `${progress.visitedCountries.length}/30`,
+                value: `${progress.visitedCountries.length}/${COUNTRIES.length}`,
               },
               {
                 icon: '💡',

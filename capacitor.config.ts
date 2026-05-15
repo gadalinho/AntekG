@@ -1,17 +1,22 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.antekg.game',
-  appName: 'AntekG',
+  appId: 'com.antekgames.worldexplorer',
+  appName: 'World Explorer',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
   },
+  android: {
+    backgroundColor: '#1B3B6F',
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#000000',
+      backgroundColor: '#1B3B6F',
       showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
     },
   },
 };

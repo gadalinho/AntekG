@@ -7,8 +7,9 @@ import { FlagGuessGame } from '@/games/FlagGuessGame';
 import { PhraseMatchGame } from '@/games/PhraseMatchGame';
 import { DetectiveGame } from '@/games/DetectiveGame';
 import { WordPuzzle } from '@/games/WordPuzzle';
+import { AirplaneGame } from '@/games/AirplaneGame';
 
-type GameType = 'quiz' | 'flag' | 'phrase' | 'detective' | 'puzzle';
+type GameType = 'quiz' | 'flag' | 'phrase' | 'detective' | 'puzzle' | 'airplane';
 
 interface GameInfo {
   id: GameType;
@@ -30,6 +31,13 @@ const GAME_LIST: GameInfo[] = [
     maxCoins: 20,
   },
   { id: 'puzzle', name: 'Puzzle', icon: '🧩', desc: 'Ułóż nazwę stolicy z liter', maxCoins: 20 },
+  {
+    id: 'airplane',
+    name: 'Pilot',
+    icon: '✈️',
+    desc: 'Leć samolotem i zestrzelaj kotki!',
+    maxCoins: 30,
+  },
 ];
 
 export function MiniGameScreen() {
@@ -39,12 +47,14 @@ export function MiniGameScreen() {
   const goBack = useGameStore(s => s.goBack);
   const addCoins = useGameStore(s => s.addCoins);
   const addXp = useGameStore(s => s.addXp);
+  const incrementMetric = useGameStore(s => s.incrementMetric);
 
   const country = countryId ? getCountryById(countryId) : null;
 
   function handleComplete(coins: number) {
     addCoins(coins);
     addXp(15);
+    incrementMetric('gamesPlayed', 1);
     setActiveGame(null);
   }
 
@@ -86,6 +96,7 @@ export function MiniGameScreen() {
           {activeGame === 'phrase' && <PhraseMatchGame {...gameProps} />}
           {activeGame === 'detective' && <DetectiveGame {...gameProps} />}
           {activeGame === 'puzzle' && <WordPuzzle {...gameProps} />}
+          {activeGame === 'airplane' && <AirplaneGame {...gameProps} />}
         </motion.div>
       </AnimatePresence>
     );
